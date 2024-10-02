@@ -5,7 +5,7 @@ import numpy as np
 import statsmodels.api as sm
 
 # Assuming your data is in a CSV file named 'data.csv'
-df = pd.read_csv('./commons_150am_df.csv')
+df = pd.read_csv('./commons_428am_df.csv')
 
 # Group by ep_id and check if any of the zone fractions is 0
 def check_zero(group):

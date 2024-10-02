@@ -58,11 +58,11 @@ def parse_csv_as_dict(file_path):
     return pd.DataFrame(data)
 
 # Replace 'data.txt' with your actual file path
-file_path = './commons_150am.txt'  # Example file path
+file_path = './commons_428am.txt'  # Example file path
 
 # Parse the data
 df = parse_csv_as_dict(file_path)
-output_file_path = 'commons_150am_df.csv'
+output_file_path = 'commons_428am_df.csv'
 
 # Save the dataframe to a CSV file
 save_dataframe_to_file(df, output_file_path)

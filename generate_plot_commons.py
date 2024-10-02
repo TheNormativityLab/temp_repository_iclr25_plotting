@@ -2,15 +2,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
 import numpy as np
+import statsmodels.api as sm
 
 # Assuming your data is in a CSV file named 'data.csv'
 df = pd.read_csv('./commons_150am_df.csv')
 
 # Group by ep_id and check if any of the zone fractions is 0
 def check_zero(group):
-    red_zero = (group['red_zone_fraction'] > 0).all().astype(int)
-    green_zero = (group['green_zone_fraction'] > 0).all().astype(int)
-    blue_zero = (group['blue_zone_fraction'] > 0).all().astype(int)
+    red_zero = (group['red_zone_fraction'] == 0).any().astype(int)
+    green_zero = (group['green_zone_fraction'] == 0).any().astype(int)
+    blue_zero = (group['blue_zone_fraction'] == 0).any().astype(int)
     return pd.Series({
         'red_zero': red_zero,
         'green_zero': green_zero,
@@ -33,7 +34,7 @@ sampled_df = df
 #grouped_df = sampled_df.groupby('ep_id').apply(calculate_metric).reset_index(name='metric')
 new_df = df.groupby('index').apply(check_zero).reset_index()
 #grouped_df = df.groupby('index').size().reset_index(name='metric')
-#grouped_df.sort_values(by='index', inplace=True)
+new_df.sort_values(by='index', inplace=True)
 # Display the new DataFrame
 #print(grouped_df.head(20))
 # Adding a new column 'metric' that is the average of 'red_zero', 'green_zero', and 'blue_zero'
@@ -42,23 +43,13 @@ new_df['metric'] = new_df[['red_zero', 'green_zero', 'blue_zero']].mean(axis=1)
 grouped_df = new_df
 sampled_indices = np.linspace(grouped_df['index'].min(), grouped_df['index'].max(), num=1000, dtype=int)
 grouped_df = grouped_df[grouped_df['index'].isin(sampled_indices)]
+grouped_df['metric'] = np.where(grouped_df['metric'] > 0, 0, 1)
+# Calculate the cumulative mean of metric to show how frequently it becomes 1 as index increases
+grouped_df['cumulative_mean'] = grouped_df['metric'].expanding().mean()
 
-# Normalize the 'ep_id' column to be between 0 and 1
-min_ep_id = grouped_df['index'].min()
-max_ep_id = grouped_df['index'].max()
-grouped_df['normalized_ep_id'] = (grouped_df['index'] - min_ep_id) / (max_ep_id - min_ep_id)
+# Plot the cumulative proportion of 1s over increasing index values
+plt.plot(grouped_df['index'], grouped_df['cumulative_mean'], marker='o', linestyle='-')
+plt.xlabel('Index')
+plt.ylabel('Cumulative Proportion of Depletion')
 
-slope, intercept, r_value, p_value, std_err = stats.linregress(grouped_df['normalized_ep_id'], grouped_df['metric'])
-
-# Create the plot
-plt.figure(figsize=(10, 6))
-plt.scatter(grouped_df['normalized_ep_id'], grouped_df['metric'])
-
-# Add the regression line
-plt.plot(grouped_df['normalized_ep_id'], slope * grouped_df['normalized_ep_id'] + intercept, color='red', label=f'y={slope:.2f}x+{intercept:.2f}')
-
-plt.xlabel('Normalized Episode ID')
-plt.ylabel('Depletion Metric')
-plt.title('Metric vs. Normalized Episode ID with Linear Regression')
-plt.legend()
 plt.show()

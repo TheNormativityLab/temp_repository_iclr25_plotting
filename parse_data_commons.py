@@ -14,7 +14,8 @@ def clean_and_parse_line(line):
 # Function to read and parse the raw data from a file
 def parse_csv_as_dict(file_path):
     data = []
-    
+    ep_id_index_map = {}  # A dictionary to track index for each ep_id
+    idx = 0
     # Reading the file contents
     with open(file_path, 'r') as file:
         for line in file:
@@ -35,9 +36,16 @@ def parse_csv_as_dict(file_path):
             green_zone_fractions = line_data['green_zone_count']
             blue_zone_fractions = line_data['blue_zone_count']
             
+            # Initialize index for this ep_id if it hasn't been encountered before
+            if ep_id not in ep_id_index_map:
+                idx+=1
+            ep_id_index_map[ep_id] = 1
+
+            
             # Zip all values together to create rows
             for step, altar_color, red_zone, green_zone, blue_zone in zip(steps, altar_colors, red_zone_fractions, green_zone_fractions, blue_zone_fractions):
                 data.append({
+                    'index': idx,  # Index unique to each ep_id
                     'ep_id': ep_id,
                     'step': step,
                     'altar_color': altar_color,
@@ -45,16 +53,16 @@ def parse_csv_as_dict(file_path):
                     'green_zone_fraction': green_zone,
                     'blue_zone_fraction': blue_zone
                 })
+                
     
     return pd.DataFrame(data)
 
 # Replace 'data.txt' with your actual file path
-file_path = './commons.txt'  # Example file path
+file_path = './commons_150am.txt'  # Example file path
 
 # Parse the data
 df = parse_csv_as_dict(file_path)
-output_file_path = 'commons_df.csv'
+output_file_path = 'commons_150am_df.csv'
 
 # Save the dataframe to a CSV file
 save_dataframe_to_file(df, output_file_path)
-
